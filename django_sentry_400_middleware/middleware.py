@@ -17,9 +17,13 @@ class Sentry400CatchMiddleware(MiddlewareMixin):
         self.client = client
         self.ignored_user_agents = settings.IGNORED_USER_AGENTS
         self.get_response = get_response
+        self._data = None
+
+    def process_request(self, request):
+        if settings.PROCESS_REQUEST_POST_DATA:
+            self._data = self.client.get_data_from_request(request)
 
     def process_response(self, request, response):
-
         status_code = response.status_code
 
         if (400 > status_code or status_code >= 500) or not self.client.is_enabled():
@@ -29,7 +33,8 @@ class Sentry400CatchMiddleware(MiddlewareMixin):
             if re.match(USER_AGENT, request.META['HTTP_USER_AGENT']):
                 return response
 
-        data = self.client.get_data_from_request(request)
+        data = self._data if settings.PROCESS_REQUEST_POST_DATA else self.client.get_data_from_request(request)
+
         data.update({
             'level': logging.INFO,
             'logger': 'django',

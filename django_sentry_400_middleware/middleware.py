@@ -17,7 +17,7 @@ class Sentry400CatchMiddleware(MiddlewareMixin):
         self.client = client
         self.ignored_user_agents = settings.IGNORED_USER_AGENTS
         self.get_response = get_response
-        self._data = None
+        self._data = {}
 
     def process_request(self, request):
         if settings.PROCESS_REQUEST_POST_DATA:
@@ -54,4 +54,5 @@ class Sentry400CatchMiddleware(MiddlewareMixin):
             'project_id': data.get('project', self.client.remote.project),
             'id': self.client.get_ident(result),
         }
+        self._data = {}
         return response
